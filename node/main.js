@@ -14,6 +14,7 @@ const connection = mysql.createConnection(config)
 app.get('/', (req, res) => {
     res.send('<h1>Full Cycle Rocks!</h1>')
 })
+
 app.get('/:username', (req, res) => {
     const username = req.params.username;
     if (username) {
