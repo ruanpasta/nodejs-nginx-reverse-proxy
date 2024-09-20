@@ -18,6 +18,8 @@ app.get("/", (req, res) => {
 
 app.get("/:username", (req, res) => {
   const username = req.params.username;
+  if (username === 'favicon.ico')  return res.status(204).send();
+
   if (username) {
     const sqlInsert = `INSERT INTO people (name) values(?)`;
     const sqlSelect = `SELECT * FROM people;`;
