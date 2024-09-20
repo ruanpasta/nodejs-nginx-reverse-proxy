@@ -1,30 +1,53 @@
-const express = require('express')
-const app = express()
-const port = 3000
+const express = require("express");
+const app = express();
+const port = 3000;
 const config = {
-    host: 'db',
-    user: 'root',
-    password: 'root',
-    database: 'nodedb'
-}
+  connectionLimit: 10,
+  host: "db",
+  user: "root",
+  password: "root",
+  database: "nodedb",
+};
 
-const mysql = require('mysql')
-const connection = mysql.createConnection(config)
+const mysql = require("mysql");
+const pool = mysql.createPool(config);
 
-app.get('/', (req, res) => {
-    res.send('<h1>Full Cycle Rocks!</h1>')
-})
+app.get("/", (req, res) => {
+  res.send("<h1>Full Cycle Rocks!</h1>");
+});
 
-app.get('/:username', (req, res) => {
-    const username = req.params.username;
-    if (username) {
-        const sql = `INSERT INTO people (name) values('${username}')`
-        connection.query(sql)
-        connection.end()
-    }
-    res.send('<h1>Full Cycle Rocks!</h1>')
-})
+app.get("/:username", (req, res) => {
+  const username = req.params.username;
+  if (username) {
+    const sqlInsert = `INSERT INTO people (name) values(?)`;
+    const sqlSelect = `SELECT * FROM people;`;
+
+    pool.getConnection((err, connection) => {
+      if (err)
+        return res
+          .status(500)
+          .send("Erro ao obter a conexão do banco de dados.");
+
+      connection.query(sqlInsert, [username], (err) => {
+        if (err) {
+          connection.release();
+          return res.status(500).send("Erro ao inserir no banco de dados.");
+        }
+
+        connection.query(sqlSelect, (err, result) => {
+          connection.release();
+          if (err)
+            return res.status(500).send("Erro ao buscar no banco de dados.");
+
+          res.send(result);
+        });
+      });
+    });
+    return;
+  }
+  res.send("<h1>Full Cycle Rocks!</h1>");
+});
 
 app.listen(port, () => {
-    console.log(`App listening on port ${port}`)
-})
+  console.log(`App listening on port ${port}`);
+});
